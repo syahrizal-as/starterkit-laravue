@@ -30,8 +30,8 @@ Admin dashboard modern menggunakan Laravel 12 + Vue.js 3 + Vuetify 3 dengan sist
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/username/sneat-laravel.git
-cd sneat-laravel
+git clone https://github.com/syahrizal-as/starterkit-laravue
+cd starterkit-laravue
 ```
 
 ### 2. Install Dependencies
