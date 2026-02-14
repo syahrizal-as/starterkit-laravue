@@ -31,6 +31,13 @@ const deleteDialogVisible = ref(false)
 const userToDelete = ref<User | null>(null)
 const deleteLoading = ref(false)
 
+// Avatar Upload
+const avatarFile = ref<File | null>(null)
+const avatarPreview = ref<string | null>(null)
+const avatarError = ref<string | null>(null)
+const isDragging = ref(false)
+const fileInput = ref<HTMLInputElement | null>(null)
+
 // Form
 const form = ref({
   name: '',
@@ -113,12 +120,53 @@ const fetchRoles = async () => {
   }
 }
 
+// File handling
+const validateFile = (file: File) => {
+  if (file.size > 5 * 1024 * 1024) { // 5MB
+    avatarError.value = 'File size must be less than 5MB'
+    return false
+  }
+  if (!file.type.startsWith('image/')) {
+    avatarError.value = 'File must be an image'
+    return false
+  }
+  avatarError.value = null
+  return true
+}
+
+const handleFileSelect = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  if (input.files && input.files[0]) {
+    const file = input.files[0]
+    if (validateFile(file)) {
+      avatarFile.value = file
+      avatarPreview.value = URL.createObjectURL(file)
+    } else {
+      input.value = '' // Reset input
+    }
+  }
+}
+
+const handleFileDrop = (event: DragEvent) => {
+  isDragging.value = false
+  if (event.dataTransfer?.files && event.dataTransfer.files[0]) {
+    const file = event.dataTransfer.files[0]
+    if (validateFile(file)) {
+      avatarFile.value = file
+      avatarPreview.value = URL.createObjectURL(file)
+    }
+  }
+}
+
 // Open add dialog
 const openAddDialog = () => {
   dialogTitle.value = 'Add User'
   isEdit.value = false
   selectedUser.value = null
   form.value = { name: '', email: '', password: '', roles: [] }
+  avatarFile.value = null
+  avatarPreview.value = null
+  avatarError.value = null
   roleSearch.value = ''
   dialogVisible.value = true
 }
@@ -134,27 +182,45 @@ const openEditDialog = (user: User) => {
     password: '',
     roles: user.roles?.map(r => r.id) || [],
   }
+  // Set avatarPreview if user has existing avatar
+  avatarFile.value = null
+  avatarPreview.value = user.avatar ? '/storage/' + user.avatar : null
+  avatarError.value = null
   roleSearch.value = ''
   dialogVisible.value = true
 }
 
 // Save user
 const saveUser = async () => {
+  if (avatarError.value) return;
+
   formLoading.value = true
   try {
+    // Check if we need to use FormData (if avatar is present or always to be consistent)
+    // Always using FormData for simplicity when avatar is involved, or construct conditionally
+    const formData = new FormData()
+    formData.append('name', form.value.name)
+    formData.append('email', form.value.email)
+    
+    if (form.value.password) {
+      formData.append('password', form.value.password)
+    }
+    
+    // Append roles
+    form.value.roles.forEach(roleId => {
+      formData.append('roles[]', roleId.toString())
+    })
+
+    if (avatarFile.value) {
+      formData.append('avatar', avatarFile.value)
+    }
+
     if (isEdit.value && selectedUser.value) {
-      const updateData: any = {
-        name: form.value.name,
-        email: form.value.email,
-        roles: form.value.roles,
-      }
-      if (form.value.password) {
-        updateData.password = form.value.password
-      }
-      await userService.update(selectedUser.value.id, updateData)
+      // For update, we passing formData which will use POST + _method: PUT inside userService
+      await userService.update(selectedUser.value.id, formData)
       showSnackbar('User updated successfully', 'success')
     } else {
-      await userService.create(form.value)
+      await userService.create(formData)
       showSnackbar('User created successfully', 'success')
     }
     dialogVisible.value = false
@@ -336,7 +402,8 @@ onMounted(() => {
                     :color="getRoleColor(user.roles?.[0]?.name || 'user')"
                     variant="tonal"
                   >
-                    <span class="text-sm font-weight-medium">
+                    <VImg v-if="user.avatar" :src="'/storage/' + user.avatar" cover />
+                    <span v-else class="text-sm font-weight-medium">
                       {{ user.name.charAt(0).toUpperCase() }}
                     </span>
                   </VAvatar>
@@ -429,6 +496,54 @@ onMounted(() => {
         <VCardText>
           <VForm @submit.prevent="saveUser">
             <VRow>
+              <!-- Avatar Dropzone -->
+              <VCol cols="12">
+                <div class="mb-1 text-subtitle-2 text-medium-emphasis">Avatar</div>
+                <div
+                  class="d-flex flex-column justify-center align-center border-dashed rounded pa-6 cursor-pointer"
+                  :class="[
+                    isDragging ? 'border-primary bg-primary-subtle' : 'border-medium-emphasis',
+                    avatarError ? 'border-error' : ''
+                  ]"
+                  style="border-width: 2px; transition: all 0.2s ease"
+                  @dragover.prevent="isDragging = true"
+                  @dragleave.prevent="isDragging = false"
+                  @drop.prevent="handleFileDrop"
+                  @click="fileInput?.click()"
+                >
+                  <input
+                    ref="fileInput"
+                    type="file"
+                    accept="image/*"
+                    class="d-none"
+                    @change="handleFileSelect"
+                  />
+                  
+                  <template v-if="avatarPreview">
+                    <VAvatar size="80" class="mb-3">
+                      <VImg :src="avatarPreview" cover />
+                    </VAvatar>
+                    <div class="text-caption text-medium-emphasis">Click to change</div>
+                  </template>
+                  <template v-else>
+                    <VAvatar size="60" color="secondary" variant="tonal" class="mb-3">
+                      <VIcon icon="bx-cloud-upload" size="30" />
+                    </VAvatar>
+                    <span class="text-body-2 font-weight-medium">
+                      Drag & drop or click to upload
+                    </span>
+                  </template>
+                  
+                  <span class="text-caption text-disabled mt-1">
+                    Max size: 5MB
+                  </span>
+                </div>
+                <div v-if="avatarError" class="text-error text-caption mt-1 d-flex align-center">
+                  <VIcon icon="bx-error-circle" size="14" class="me-1" />
+                  {{ avatarError }}
+                </div>
+              </VCol>
+
               <VCol cols="12">
                 <VTextField
                   v-model="form.name"

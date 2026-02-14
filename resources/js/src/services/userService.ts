@@ -5,6 +5,7 @@ export interface User {
   id: number
   name: string
   email: string
+  avatar: string | null
   email_verified_at: string | null
   roles: Role[]
   permissions: Array<{ id: number; name: string }>
@@ -57,12 +58,17 @@ export const userService = {
     return response.data
   },
 
-  async create(data: CreateUserData): Promise<{ success: boolean; message: string; data: User }> {
+  async create(data: CreateUserData | FormData): Promise<{ success: boolean; message: string; data: User }> {
     const response = await api.post('/users', data)
     return response.data
   },
 
-  async update(id: number, data: UpdateUserData): Promise<{ success: boolean; message: string; data: User }> {
+  async update(id: number, data: UpdateUserData | FormData): Promise<{ success: boolean; message: string; data: User }> {
+    if (data instanceof FormData) {
+      data.append('_method', 'PUT')
+      const response = await api.post(`/users/${id}`, data)
+      return response.data
+    }
     const response = await api.put(`/users/${id}`, data)
     return response.data
   },

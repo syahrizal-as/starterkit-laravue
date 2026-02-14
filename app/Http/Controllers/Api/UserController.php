@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
@@ -50,6 +51,9 @@ class UserController extends Controller
     /**
      * Store a newly created user
      */
+    /**
+     * Store a newly created user
+     */
     public function store(Request $request)
     {
         $request->validate([
@@ -58,13 +62,21 @@ class UserController extends Controller
             'password' => 'required|string|min:8',
             'roles' => 'nullable|array',
             'roles.*' => 'exists:roles,id',
+            'avatar' => 'nullable|image|max:5120', // 5MB max
         ]);
 
-        $user = User::create([
+        $userData = [
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-        ]);
+        ];
+
+        if ($request->hasFile('avatar')) {
+            $path = $request->file('avatar')->store('avatars', 'public');
+            $userData['avatar'] = $path;
+        }
+
+        $user = User::create($userData);
 
         if ($request->has('roles') && is_array($request->roles)) {
             $roles = Role::whereIn('id', $request->roles)->get();
@@ -100,18 +112,28 @@ class UserController extends Controller
             'password' => 'nullable|string|min:8',
             'roles' => 'nullable|array',
             'roles.*' => 'exists:roles,id',
+            'avatar' => 'nullable|image|max:5120', // 5MB max
         ]);
 
-        $user->update([
+        $userData = [
             'name' => $request->name,
             'email' => $request->email,
-        ]);
+        ];
 
         if ($request->filled('password')) {
-            $user->update([
-                'password' => Hash::make($request->password),
-            ]);
+            $userData['password'] = Hash::make($request->password);
         }
+
+        if ($request->hasFile('avatar')) {
+            // Delete old avatar if exists
+            if ($user->avatar) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+            $path = $request->file('avatar')->store('avatars', 'public');
+            $userData['avatar'] = $path;
+        }
+
+        $user->update($userData);
 
         if ($request->has('roles')) {
             $roles = Role::whereIn('id', $request->roles)->get();
@@ -136,6 +158,11 @@ class UserController extends Controller
                 'success' => false,
                 'message' => 'Cannot delete your own account'
             ], 403);
+        }
+
+        // Delete avatar if exists
+        if ($user->avatar) {
+           Storage::disk('public')->delete($user->avatar);
         }
 
         $user->delete();
