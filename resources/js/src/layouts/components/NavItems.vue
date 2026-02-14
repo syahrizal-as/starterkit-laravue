@@ -90,6 +90,14 @@ watch(() => authStore.user, () => {
 onMounted(() => {
   fetchMenus()
 })
+const props = defineProps<{
+  horizontal?: boolean
+}>()
+
+// Components switch based on horizontal prop
+const NavLink = props.horizontal ? defineAsyncComponent(() => import('@layouts/components/HorizontalNavLink.vue')) : VerticalNavLink
+const NavGroup = props.horizontal ? defineAsyncComponent(() => import('@layouts/components/HorizontalNavGroup.vue')) : VerticalNavGroup
+const NavSectionTitle = props.horizontal ? null : VerticalNavSectionTitle
 </script>
 
 <template>
@@ -100,54 +108,70 @@ onMounted(() => {
 
   <!-- Dynamic menus -->
   <template v-else>
-    <template v-for="menu in menus" :key="menu.id">
-      <!-- Section Title -->
-      <VerticalNavSectionTitle
-        v-if="menu.is_section_title && hasPermission(menu.permission)"
-        :item="buildSectionItem(menu)"
-      />
+    <div :class="props.horizontal ? 'd-flex align-center flex-wrap gap-2 w-100' : ''">
+      <template v-for="menu in menus" :key="menu.id">
+        <!-- Section Title (Only for vertical) -->
+        <NavSectionTitle
+          v-if="!props.horizontal && menu.is_section_title && hasPermission(menu.permission)"
+          :item="buildSectionItem(menu)"
+        />
 
-      <!-- Group with children -->
-      <VerticalNavGroup
-        v-else-if="menu.children && menu.children.length > 0 && hasPermission(menu.permission)"
-        :item="buildGroupItem(menu)"
-      >
-        <template v-for="child in menu.children" :key="child.id">
-          <VerticalNavLink
-            v-if="hasPermission(child.permission)"
-            :item="buildMenuItem(child)"
-          />
-        </template>
-      </VerticalNavGroup>
+        <!-- Group with children -->
+        <NavGroup
+          v-else-if="menu.children && menu.children.length > 0 && hasPermission(menu.permission)"
+          :item="buildGroupItem(menu)"
+        >
+          <template v-for="child in menu.children" :key="child.id">
+            <template v-if="props.horizontal">
+                <VListItem
+                    v-if="hasPermission(child.permission)"
+                    :to="child.to || undefined"
+                    :href="child.href || undefined"
+                    :target="child.target || undefined"
+                    :prepend-icon="child.icon || undefined"
+                >
+                    <VListItemTitle>{{ child.title }}</VListItemTitle>
+                </VListItem>
+            </template>
+            <NavLink
+              v-else-if="hasPermission(child.permission)"
+              :item="buildMenuItem(child)"
+            />
+          </template>
+        </NavGroup>
 
-      <!-- Single link -->
-      <VerticalNavLink
-        v-else-if="(menu.to || menu.href) && hasPermission(menu.permission)"
-        :item="buildMenuItem(menu)"
-      />
-    </template>
+        <!-- Single link -->
+        <NavLink
+            v-else-if="(menu.to || menu.href) && hasPermission(menu.permission)"
+            :item="buildMenuItem(menu)"
+        />
+      </template>
+    </div>
   </template>
 
   <!-- Fallback menus if empty -->
   <template v-if="!loading && menus.length === 0">
-    <VerticalNavLink
-      :item="{
-        title: 'Dashboard',
-        icon: 'bx-home-smile',
-        to: '/dashboard',
-      }"
-    />
+    <div :class="props.horizontal ? 'd-flex align-center flex-wrap gap-2 w-100' : ''">
+        <NavLink
+        :item="{
+            title: 'Dashboard',
+            icon: 'bx-home-smile',
+            to: '/dashboard',
+        }"
+        />
 
-    <VerticalNavSectionTitle
-      :item="{ heading: 'Settings' }"
-    />
+        <NavSectionTitle
+        v-if="!props.horizontal"
+        :item="{ heading: 'Settings' }"
+        />
 
-    <VerticalNavLink
-      :item="{
-        title: 'Account Settings',
-        icon: 'bx-cog',
-        to: '/account-settings',
-      }"
-    />
+        <NavLink
+        :item="{
+            title: 'Account Settings',
+            icon: 'bx-cog',
+            to: '/account-settings',
+        }"
+        />
+    </div>
   </template>
 </template>

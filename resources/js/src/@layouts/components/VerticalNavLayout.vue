@@ -1,12 +1,14 @@
 <script lang="ts">
 import { useDisplay } from 'vuetify'
 import VerticalNav from '@layouts/components/VerticalNav.vue'
+import { useThemeConfigStore } from '@/stores/themeConfig'
 
 export default defineComponent({
   setup(props, { slots }) {
     const isOverlayNavActive = ref(false)
     const isLayoutOverlayVisible = ref(false)
     const toggleIsOverlayNavActive = useToggle(isOverlayNavActive)
+    const themeConfigStore = useThemeConfigStore()
 
     const route = useRoute()
     const { mdAndDown } = useDisplay()
@@ -19,7 +21,15 @@ export default defineComponent({
       // 👉 Vertical nav
       const verticalNav = h(
         VerticalNav,
-        { isOverlayNavActive: isOverlayNavActive.value, toggleIsOverlayNavActive },
+        { 
+          isOverlayNavActive: isOverlayNavActive.value, 
+          toggleIsOverlayNavActive,
+          // Collapse support
+          class: [
+            themeConfigStore.layout === 'collapsed' && 'collapsed',
+            themeConfigStore.isSemiDark && 'semi-dark'
+          ]
+        },
         {
           'nav-header': () => slots['vertical-nav-header']?.({ toggleIsOverlayNavActive }),
           'before-nav-items': () => slots['before-vertical-nav-items']?.(),
@@ -31,7 +41,12 @@ export default defineComponent({
       // 👉 Navbar
       const navbar = h(
         'header',
-        { class: ['layout-navbar navbar-blur'] },
+        { 
+          class: [
+            'layout-navbar', 
+            themeConfigStore.isNavbarBlurEnabled && 'navbar-blur'
+          ] 
+        },
         [
           h(
             'div',
@@ -75,7 +90,13 @@ export default defineComponent({
         'div',
         {
           class: [
-            'layout-wrapper layout-nav-type-vertical layout-navbar-static layout-footer-static layout-content-width-fluid',
+            'layout-wrapper',
+            `layout-nav-type-${themeConfigStore.layout === 'collapsed' ? 'vertical' : themeConfigStore.layout}`,
+            themeConfigStore.layout === 'collapsed' && 'layout-vertical-nav-collapsed',
+            `layout-navbar-${themeConfigStore.navbarType}`,
+            `layout-footer-${themeConfigStore.footerType}`,
+            `layout-content-width-${themeConfigStore.contentWidth}`,
+            themeConfigStore.skin === 'bordered' && 'skin--bordered',
             mdAndDown.value && 'layout-overlay-nav',
             route.meta.layoutWrapperClasses,
           ],
@@ -203,6 +224,37 @@ export default defineComponent({
         }
       }
     }
+  }
+}
+
+// 👉 Skin: Bordered
+.layout-wrapper.skin--bordered {
+  .layout-navbar,
+  .layout-vertical-nav,
+  .layout-footer {
+    border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+    box-shadow: none !important;
+  }
+
+  .layout-navbar {
+    border-block-start: none;
+    border-inline: none;
+  }
+
+  .layout-vertical-nav {
+    border-block: none;
+    border-inline-start: none;
+
+    &.scrolled {
+      .vertical-nav-items-shadow {
+        display: none !important;
+      }
+    }
+  }
+
+  .layout-footer {
+    border-block-end: none;
+    border-inline: none;
   }
 }
 </style>

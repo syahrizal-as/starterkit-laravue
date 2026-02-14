@@ -155,7 +155,7 @@ const handleLogin = async () => {
                   density="compact"
                 >
                   <div class="text-caption">
-                    <strong>Demo:</strong> admin@example.com / password
+                    <strong>Demo:</strong> superadmin@example.com / password
                   </div>
                 </VAlert>
               </VCol>

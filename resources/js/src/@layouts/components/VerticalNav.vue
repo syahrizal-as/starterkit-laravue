@@ -2,6 +2,7 @@
 import type { Component } from 'vue'
 import { PerfectScrollbar } from 'vue3-perfect-scrollbar'
 import { useDisplay } from 'vuetify'
+import { useThemeConfigStore } from '@/stores/themeConfig'
 import logo from '@images/logo.svg?raw'
 
 interface Props {
@@ -36,21 +37,36 @@ const updateIsVerticalNavScrolled = (val: boolean) => isVerticalNavScrolled.valu
 const handleNavScroll = (evt: Event) => {
   isVerticalNavScrolled.value = (evt.target as HTMLElement).scrollTop > 0
 }
+
+const isHovered = ref(false)
+
+const themeConfigStore = useThemeConfigStore()
+
+const theme = computed(() => {
+  if (themeConfigStore.isSemiDark && (themeConfigStore.themeMode === 'light' || (themeConfigStore.themeMode === 'system' && !window.matchMedia('(prefers-color-scheme: dark)').matches)))
+    return 'dark'
+
+  return undefined
+})
 </script>
 
 <template>
-  <Component
-    :is="props.tag"
-    ref="refNav"
-    data-allow-mismatch
-    class="layout-vertical-nav"
+  <v-theme-provider :theme="theme">
+    <Component
+      :is="props.tag"
+      ref="refNav"
+      data-allow-mismatch
+      class="layout-vertical-nav"
     :class="[
       {
         'visible': isOverlayNavActive,
         'scrolled': isVerticalNavScrolled,
         'overlay-nav': mdAndDown,
+        'hovered': isHovered,
       },
     ]"
+    @mouseenter="isHovered = true"
+    @mouseleave="isHovered = false"
   >
     <!-- 👉 Header -->
     <div class="nav-header">
@@ -88,6 +104,7 @@ const handleNavScroll = (evt: Event) => {
     </slot>
     <slot name="after-nav-items" />
   </Component>
+  </v-theme-provider>
 </template>
 
 <style lang="scss" scoped>

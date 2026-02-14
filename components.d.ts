@@ -16,6 +16,7 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     TablePagination: typeof import('./resources/js/src/components/TablePagination.vue')['default']
+    ThemeCustomizer: typeof import('./resources/js/src/@core/components/ThemeCustomizer.vue')['default']
     ThemeSwitcher: typeof import('./resources/js/src/@core/components/ThemeSwitcher.vue')['default']
     UpgradeToPro: typeof import('./resources/js/src/components/UpgradeToPro.vue')['default']
     VueApexCharts: typeof import('vue3-apexcharts')['default']

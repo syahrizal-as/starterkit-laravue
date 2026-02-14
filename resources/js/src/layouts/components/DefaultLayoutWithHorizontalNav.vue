@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import NavItems from '@/layouts/components/NavItems.vue'
 import logo from '@images/logo.svg?raw'
-import VerticalNavLayout from '@layouts/components/VerticalNavLayout.vue'
+import HorizontalNavLayout from '@layouts/components/HorizontalNavLayout.vue'
 
 // Components
 import Footer from '@/layouts/components/Footer.vue'
@@ -10,24 +10,28 @@ import UserProfile from '@/layouts/components/UserProfile.vue'
 </script>
 
 <template>
-  <VerticalNavLayout>
+  <HorizontalNavLayout>
     <!-- 👉 navbar -->
-    <template #navbar="{ toggleVerticalOverlayNavActive }">
-      <div class="d-flex h-100 align-center">
-        <!-- 👉 Vertical nav toggle in overlay mode -->
-        <IconBtn
-          class="ms-n3 d-lg-none"
-          @click="toggleVerticalOverlayNavActive(true)"
+    <template #navbar>
+      <div class="d-flex h-100 align-center w-100">
+        <RouterLink
+          to="/"
+          class="app-logo app-title-wrapper me-6"
         >
-          <VIcon icon="bx-menu" />
-        </IconBtn>
+          <div
+            class="d-flex"
+            v-html="logo"
+          />
+          <h1 class="app-logo-title">
+            sneat
+          </h1>
+        </RouterLink>
 
         <!-- 👉 Search -->
         <div
           class="d-flex align-center cursor-pointer ms-lg-n3"
           style="user-select: none;"
         >
-          <!-- 👉 Search Trigger button -->
           <IconBtn>
             <VIcon icon="bx-search" />
           </IconBtn>
@@ -58,33 +62,10 @@ import UserProfile from '@/layouts/components/UserProfile.vue'
       </div>
     </template>
 
-    <template #vertical-nav-header="{ toggleIsOverlayNavActive }">
-      <RouterLink
-        to="/"
-        class="app-logo app-title-wrapper"
-      >
-        <!-- eslint-disable vue/no-v-html -->
-        <div
-          class="d-flex"
-          v-html="logo"
-        />
-        <!-- eslint-enable -->
-
-        <h1 class="app-logo-title">
-          sneat
-        </h1>
-      </RouterLink>
-
-      <IconBtn
-        class="d-block d-lg-none"
-        @click="toggleIsOverlayNavActive(false)"
-      >
-        <VIcon icon="bx-x" />
-      </IconBtn>
-    </template>
-
-    <template #vertical-nav-content>
-      <NavItems />
+    <template #horizontal-nav-content>
+      <div class="d-flex align-center w-100">
+        <NavItems horizontal />
+      </div>
     </template>
 
     <!-- 👉 Pages -->
@@ -97,7 +78,7 @@ import UserProfile from '@/layouts/components/UserProfile.vue'
 
     <!-- 👉 Customizer -->
     <ThemeCustomizer />
-  </VerticalNavLayout>
+  </HorizontalNavLayout>
 </template>
 
 <style lang="scss" scoped>
