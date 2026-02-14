@@ -155,13 +155,36 @@ class MenuSeeder extends Seeder
             'order' => 13,
         ]);
 
+        // Kanban
+        Menu::create([
+            'title' => 'Kanban',
+            'icon' => 'bx-grid-alt',
+            'to' => '/kanban',
+            'order' => 14,
+        ]);
+
+        // Logistics Section
+        $logisticsSection = Menu::create([
+            'title' => 'Logistics',
+            'is_section_title' => true,
+            'order' => 15,
+        ]);
+
+        // Fleet
+        Menu::create([
+            'title' => 'Fleet',
+            'icon' => 'bx-car',
+            'to' => '/fleet',
+            'order' => 16,
+        ]);
+
         // Documentation
         Menu::create([
             'title' => 'Documentation',
             'icon' => 'bx-file',
             'href' => 'https://demos.themeselection.com/sneat-vuetify-vuejs-admin-template/documentation/',
             'target' => '_blank',
-            'order' => 14,
+            'order' => 17,
         ]);
     }
 }

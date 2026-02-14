@@ -59,6 +59,16 @@ export const routes = [
         path: 'form-layouts',
         component: () => import('@/pages/form-layouts.vue'),
       },
+      {
+        path: 'kanban',
+        name: 'kanban',
+        component: () => import('@/pages/kanban.vue'),
+      },
+      {
+        path: 'fleet',
+        name: 'fleet',
+        component: () => import('@/pages/fleet.vue'),
+      },
     ],
   },
   {
