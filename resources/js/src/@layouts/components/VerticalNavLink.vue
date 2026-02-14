@@ -18,7 +18,7 @@ defineProps<{
       :target="item.target"
     >
       <VIcon
-        :icon="item.icon || 'bxs-circle'"
+        :icon="(item.icon as string) || 'bxs-circle'"
         class="nav-item-icon"
       />
       <!-- 👉 Title -->

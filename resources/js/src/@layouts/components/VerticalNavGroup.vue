@@ -18,7 +18,7 @@ const isOpen = ref(false)
       @click="isOpen = !isOpen"
     >
       <VIcon
-        :icon="item.icon || 'bxs-circle'"
+        :icon="(item.icon as string) || 'bxs-circle'"
         class="nav-item-icon"
       />
       <span class="nav-item-title">{{ item.title }}</span>

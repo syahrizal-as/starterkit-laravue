@@ -49,6 +49,11 @@ const hasPermission = (permission: string | null | string[]) => {
   // No permission required
   if (!permission) return false
 
+  // Array permission check (check if has ANY)
+  if (Array.isArray(permission)) {
+    return permission.some(p => authStore.hasPermission(p))
+  }
+
   // Single permission check
   return authStore.hasPermission(permission)
 }
