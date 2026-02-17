@@ -44,6 +44,14 @@ router.beforeEach((to, from, next) => {
     }
   }
   
+  // Set document title
+  const title = to.meta.title as string | undefined
+  if (title) {
+    document.title = `${title} - ${import.meta.env.VITE_APP_NAME || 'Sneat Admin'}`
+  } else {
+    document.title = import.meta.env.VITE_APP_NAME || 'Sneat Admin'
+  }
+
   next()
 })
 
