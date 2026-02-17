@@ -2,8 +2,10 @@
 import { menuService, type Menu } from '@/services/menuService'
 import { permissionService } from '@/services/permissionService'
 import MenuTreeItem from '@/components/MenuTreeItem.vue'
+import { useAuthStore } from '@/stores/auth'
 
 // Data
+const authStore = useAuthStore()
 const menus = ref<Menu[]>([])
 const permissions = ref<Array<{ id: number; name: string }>>([])
 const loading = ref(false)
@@ -19,6 +21,18 @@ const formLoading = ref(false)
 const deleteDialogVisible = ref(false)
 const menuToDelete = ref<Menu | null>(null)
 const deleteLoading = ref(false)
+const hasPermission = (permission: string | null | string[]) => {
+  // No permission required
+  if (!permission) return false
+
+  // Array permission check (check if has ANY)
+  if (Array.isArray(permission)) {
+    return permission.some(p => authStore.hasPermission(p))
+  }
+
+  // Single permission check
+  return authStore.hasPermission(permission)
+}
 
 // Form
 const form = ref({
@@ -277,6 +291,7 @@ onMounted(() => {
           </p>
         </div>
         <VBtn
+          v-if="hasPermission('menu.create')"
           color="primary"
           prepend-icon="bx-plus"
           @click="openAddDialog(null)"

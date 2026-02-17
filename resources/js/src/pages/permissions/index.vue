@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { permissionService, type Permission } from '@/services/permissionService'
 import TablePagination from '@/components/TablePagination.vue'
+import { useAuthStore } from '@/stores/auth'
 
 // Data
+const authStore = useAuthStore()
 const permissions = ref<Permission[]>([])
 const loading = ref(false)
 const search = ref('')
@@ -29,7 +31,18 @@ const bulkLoading = ref(false)
 const deleteDialogVisible = ref(false)
 const permissionToDelete = ref<Permission | null>(null)
 const deleteLoading = ref(false)
+const hasPermission = (permission: string | null | string[]) => {
+  // No permission required
+  if (!permission) return false
 
+  // Array permission check (check if has ANY)
+  if (Array.isArray(permission)) {
+    return permission.some(p => authStore.hasPermission(p))
+  }
+
+  // Single permission check
+  return authStore.hasPermission(permission)
+}
 // Form
 const form = ref({
   name: '',
@@ -223,6 +236,7 @@ onMounted(() => {
         </div>
         <div class="d-flex gap-2">
           <VBtn
+            v-if="hasPermission('permission.create')"
             variant="outlined"
             color="primary"
             prepend-icon="bx-list-plus"
@@ -231,6 +245,7 @@ onMounted(() => {
             Bulk Add
           </VBtn>
           <VBtn
+            v-if="hasPermission('permission.create')"
             color="primary"
             prepend-icon="bx-plus"
             @click="openAddDialog"

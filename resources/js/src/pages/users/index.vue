@@ -314,6 +314,7 @@ onMounted(() => {
           <p class="text-body-1 mb-0">Manage users and their roles</p>
         </div>
         <VBtn
+          v-if="hasPermission('user.create')"
           color="primary"
           prepend-icon="bx-plus"
           @click="openAddDialog"
