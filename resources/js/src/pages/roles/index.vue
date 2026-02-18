@@ -3,6 +3,7 @@ import { roleService, type Role } from '@/services/roleService'
 import { permissionService, type Permission } from '@/services/permissionService'
 import TablePagination from '@/components/TablePagination.vue'
 import { useAuthStore } from '@/stores/auth'
+
 // Data
 const authStore = useAuthStore()
 const roles = ref<Role[]>([])
@@ -29,15 +30,10 @@ const roleToDelete = ref<Role | null>(null)
 const deleteLoading = ref(false)
 
 const hasPermission = (permission: string | null | string[]) => {
-  // No permission required
   if (!permission) return false
-
-  // Array permission check (check if has ANY)
   if (Array.isArray(permission)) {
     return permission.some(p => authStore.hasPermission(p))
   }
-
-  // Single permission check
   return authStore.hasPermission(permission)
 }
 
@@ -47,8 +43,44 @@ const form = ref({
   permissions: [] as number[],
 })
 
-// Permission search
-const permissionSearch = ref('')
+// Grouped Permissions
+const groupedPermissions = computed(() => {
+  const groups: Record<string, any> = {}
+  
+  permissions.value.forEach(permission => {
+    const parts = permission.name.split('.')
+    const module = parts[0]
+    const action = parts.slice(1).join('.')
+    
+    if (!groups[module]) {
+      groups[module] = {
+        key: module,
+        name: module.charAt(0).toUpperCase() + module.slice(1).replace('-', ' '),
+        actions: [] as any[]
+      }
+    }
+    
+    groups[module].actions.push({
+      id: permission.id,
+      name: action.charAt(0).toUpperCase() + action.slice(1).replace('-', ' '),
+      fullName: permission.name
+    })
+  })
+  
+  return groups
+})
+
+// Administrator Access (Select All)
+const isAllSelected = computed({
+  get: () => form.value.permissions.length === permissions.value.length && permissions.value.length > 0,
+  set: (val) => {
+    if (val) {
+      form.value.permissions = permissions.value.map(p => p.id)
+    } else {
+      form.value.permissions = []
+    }
+  }
+})
 
 // Snackbar
 const snackbar = ref({
@@ -99,7 +131,6 @@ const openAddDialog = () => {
   isEdit.value = false
   selectedRole.value = null
   form.value = { name: '', permissions: [] }
-  permissionSearch.value = ''
   dialogVisible.value = true
 }
 
@@ -112,7 +143,6 @@ const openEditDialog = (role: Role) => {
     name: role.name,
     permissions: role.permissions?.map(p => p.id) || [],
   }
-  permissionSearch.value = ''
   dialogVisible.value = true
 }
 
@@ -326,88 +356,90 @@ onMounted(() => {
     <!-- Add/Edit Dialog -->
     <VDialog
       v-model="dialogVisible"
-      max-width="600"
+      max-width="800"
       persistent
     >
       <VCard>
-        <VCardTitle class="pa-6">
-          {{ dialogTitle }}
+        <VCardTitle class="pa-6 text-center">
+          <h4 class="text-h4 mb-2">{{ dialogTitle + " " + form.name }}</h4>
+          <p class="text-body-1 text-medium-emphasis mb-0">Set Role Permissions</p>
         </VCardTitle>
-        <VCardText>
+        <VCardText class="pa-6 pt-0">
           <VForm @submit.prevent="saveRole">
             <VRow>
-              <VCol cols="12">
+              <VCol cols="12" class="mb-4">
                 <VTextField
                   v-model="form.name"
                   label="Role Name"
-                  placeholder="Enter role name"
+                  placeholder="Enter Role Name"
                   :disabled="formLoading"
+                  persistent-placeholder
                 />
               </VCol>
+              
               <VCol cols="12">
-                <!-- Searchable Select (Autocomplete) for Permissions -->
-                <VAutocomplete
-                  v-model="form.permissions"
-                  v-model:search="permissionSearch"
-                  :items="permissions"
-                  item-title="name"
-                  item-value="id"
-                  label="Permissions"
-                  placeholder="Search and select permissions..."
-                  multiple
-                  chips
-                  closable-chips
-                  :disabled="formLoading"
-                  clearable
-                  hide-no-data
-                  no-filter
-                >
-                  <template #chip="{ props, item }">
-                    <VChip
-                      v-bind="props"
-                      color="primary"
-                      variant="tonal"
-                      size="small"
-                    >
-                      {{ item.raw.name }}
-                    </VChip>
-                  </template>
-                  <template #item="{ props, item }">
-                    <VListItem
-                      v-bind="props"
-                      :title="item.raw.name"
-                    >
-                      <template #prepend>
-                        <VCheckbox
-                          :model-value="form.permissions.includes(item.raw.id)"
-                          hide-details
-                          density="compact"
-                          class="me-2"
-                        />
-                      </template>
-                    </VListItem>
-                  </template>
-                </VAutocomplete>
+                <h5 class="text-h5 mb-4">Role Permissions</h5>
+                
+                <!-- Permissions Table -->
+                <VTable class="text-no-wrap border rounded">
+                  <thead>
+                    <tr>
+                      <th class="ps-6 py-4">Role Access</th>
+                      <th colspan="3" class="text-end pe-6 py-4">
+                        <div class="d-flex align-center justify-end gap-2">
+                          <VCheckbox
+                            v-model="isAllSelected"
+                            hide-details
+                            density="compact"
+                          />
+                          <span class="text-body-1">Select All</span>
+                        </div>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(group, key) in groupedPermissions" :key="key">
+                      <td class="ps-6 font-weight-medium text-body-1 py-4" style="width: 250px;">
+                        {{ group.name }}
+                      </td>
+                      <td colspan="3" class="pe-6 py-4">
+                        <div class="d-flex flex-wrap gap-x-6 gap-y-2">
+                          <div v-for="action in group.actions" :key="action.id" class="d-flex align-center gap-2">
+                            <VCheckbox
+                              v-model="form.permissions"
+                              :value="action.id"
+                              hide-details
+                              density="compact"
+                            />
+                            <span class="text-body-2">{{ action.name }}</span>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </VTable>
               </VCol>
             </VRow>
           </VForm>
         </VCardText>
-        <VCardActions class="pa-6 pt-0">
-          <VSpacer />
+        <VCardActions class="pa-6 pt-0 justify-center">
           <VBtn
-            variant="outlined"
+            color="primary"
+            variant="elevated"
+            class="px-8"
+            :loading="formLoading"
+            @click="saveRole"
+          >
+            Submit
+          </VBtn>
+          <VBtn
+            variant="tonal"
             color="secondary"
+            class="px-8"
             :disabled="formLoading"
             @click="dialogVisible = false"
           >
             Cancel
-          </VBtn>
-          <VBtn
-            color="primary"
-            :loading="formLoading"
-            @click="saveRole"
-          >
-            {{ isEdit ? 'Update' : 'Create' }}
           </VBtn>
         </VCardActions>
       </VCard>
@@ -465,3 +497,4 @@ onMounted(() => {
     </VSnackbar>
   </div>
 </template>
+
