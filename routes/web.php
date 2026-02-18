@@ -5,7 +5,8 @@ use Illuminate\Support\Facades\Route;
 // Test notification route
 Route::get('/test-notification', function () {
     \App\Events\NotificationEvent::dispatch('Halo! Ada pembaruan sistem baru pada ' . now()->toTimeString());
-    return 'Notification sent!';
+
+    return 'Notification sent!'. now()->toTimeString();
 });
 
 // Catch-all route for Vue SPA
