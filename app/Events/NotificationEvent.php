@@ -40,4 +40,11 @@ class NotificationEvent implements ShouldBroadcastNow
     {
         return 'notification.received';
     }
+
+    public function broadcastWith(): array
+    {
+        return [
+            'message' => $this->message,
+        ];
+    }
 }
