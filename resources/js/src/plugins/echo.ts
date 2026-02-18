@@ -18,6 +18,7 @@ const echo = new Echo({
   wssPort: Number(import.meta.env.VITE_REVERB_PORT) || 443,
   forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
   enabledTransports: ['ws', 'wss'],
+  disableStats: true,
 })
 console.log('Echo opts:', echo.options);
 export default function (app: App) {
