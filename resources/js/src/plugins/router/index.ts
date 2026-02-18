@@ -1,14 +1,23 @@
 import type { App } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import { routes } from './routes'
+import nprogress from 'nprogress'
+import 'nprogress/nprogress.css'
 
 const router = createRouter({
   history: createWebHistory('/'),
   routes,
 })
 
+// NProgress configuration
+nprogress.configure({
+  showSpinner: false,
+})
+
 // Navigation guard
 router.beforeEach((to, from, next) => {
+  nprogress.start()
+
   const token = localStorage.getItem('access_token')
   const isAuthenticated = !!token
   
@@ -53,6 +62,10 @@ router.beforeEach((to, from, next) => {
   }
 
   next()
+})
+
+router.afterEach(() => {
+  nprogress.done()
 })
 
 export default function (app: App) {

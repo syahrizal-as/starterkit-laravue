@@ -1,1 +1,13 @@
 // Write your overrides
+
+/* NProgress Customization */
+#nprogress {
+     .bar {
+          background: #696CFF !important;
+          height: 3px !important;
+     }
+
+     .peg {
+          box-shadow: 0 0 10px #696CFF, 0 0 5px #696CFF !important;
+     }
+}
