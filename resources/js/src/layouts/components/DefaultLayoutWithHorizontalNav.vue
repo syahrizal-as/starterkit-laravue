@@ -7,6 +7,7 @@ import HorizontalNavLayout from '@layouts/components/HorizontalNavLayout.vue'
 import Footer from '@/layouts/components/Footer.vue'
 import NavbarThemeSwitcher from '@/layouts/components/NavbarThemeSwitcher.vue'
 import UserProfile from '@/layouts/components/UserProfile.vue'
+import NavBarNotification from '@/layouts/components/NavBarNotification.vue'
 </script>
 
 <template>
@@ -52,9 +53,7 @@ import UserProfile from '@/layouts/components/UserProfile.vue'
           <VIcon icon="bxl-github" />
         </IconBtn>
 
-        <IconBtn>
-          <VIcon icon="bx-bell" />
-        </IconBtn>
+        <NavBarNotification />
 
         <NavbarThemeSwitcher class="me-1" />
 
