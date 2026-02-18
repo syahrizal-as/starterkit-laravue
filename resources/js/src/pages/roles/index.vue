@@ -384,7 +384,7 @@ onMounted(() => {
                 <VTable class="text-no-wrap border rounded">
                   <thead>
                     <tr>
-                      <th class="ps-6 py-4">Role Access</th>
+                      <th class="ps-6 py-4">{{ form.name }} Access</th>
                       <th colspan="3" class="text-end pe-6 py-4">
                         <div class="d-flex align-center justify-end gap-2">
                           <VCheckbox
